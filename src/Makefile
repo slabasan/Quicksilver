@@ -75,6 +75,10 @@
 #                   with some Clang compilers, some older Gnu compilers on BG/Q
 #                   and older Intel compilers.
 #         
+# -DUSE_CALIPER     Define this to enable Caliper instrumentation. Caliper
+#                   provides performance profiling infrastructure for a wide
+#                   range of tasks.
+#         
 # -DUSE_NVTX        Define this for some extra NVProf profiling information.
 #                   It will create regions that can be visualized in NVVP.
 #
@@ -99,6 +103,8 @@ CXXFLAGS =
 CPPFLAGS = 
 LDFLAGS =
 
+# CALIPER_DIR = $(spack location --install-dir caliper)
+
 ###############################################################################
 # Very simple GCC build with OpenMP but without MPI.  
 # This works on a Macbook (if gcc is installed)
@@ -113,7 +119,6 @@ LDFLAGS =
 #CPPFLAGS = $(OPENMP_FLAGS)
 #LDFLAGS = $(OPENMP_LDFLAGS) 
 
-
 ###############################################################################
 ### GCC -- with MPI and OpenMP 
 ###############################################################################
@@ -126,6 +131,25 @@ LDFLAGS =
 #CXXFLAGS = -std=c++11 $(OPTFLAGS) -Wpedantic
 #CPPFLAGS = $(MPI_FLAGS) $(OPENMP_FLAGS)
 #LDFLAGS = $(OPENMP_LDFLAGS) 
+
+
+###############################################################################
+### GCC -- with MPI and OpenMP and Caliper support
+###############################################################################
+CALIPER_DIR = ${HOME}/local/caliper/toss3-release
+
+CALIPER_FLAGS = -I${CALIPER_DIR}/include -DUSE_CALIPER
+CALIPER_LDFLAGS = -Wl,-rpath ${CALIPER_DIR}/lib64 -L${CALIPER_DIR}/lib64 -lcaliper-mpi -lcaliper
+
+OPENMP_FLAGS = -DHAVE_OPENMP -fopenmp
+OPENMP_LDFLAGS = -fopenmp
+MPI_FLAGS = -DHAVE_MPI
+OPTFLAGS = -g -O2
+
+CXX=mpicxx
+CXXFLAGS = -std=c++11 $(OPTFLAGS) -Wpedantic
+CPPFLAGS = $(MPI_FLAGS) $(OPENMP_FLAGS) $(CALIPER_FLAGS)
+LDFLAGS = $(OPENMP_LDFLAGS) $(CALIPER_LDFLAGS)
 
 
 ###############################################################################

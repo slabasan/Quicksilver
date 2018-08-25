@@ -6,6 +6,10 @@
 #include <chrono>
 #endif
 
+#ifdef USE_CALIPER
+#include <caliper/cali.h>
+#endif
+
 #include "portability.hh"   // needed for uint64_t in this file
 #include "utilsMpi.hh"      // needed for MPI_Comm type in this file
 
@@ -44,12 +48,20 @@ class MC_Fast_Timer
 class MC_Fast_Timer_Container
 {
 public:
-    MC_Fast_Timer_Container() {} ; // constructor
+    MC_Fast_Timer_Container()
+#ifdef USE_CALIPER
+        : cali_annotation("mc.timer", CALI_ATTR_DEFAULT | CALI_ATTR_NESTED)
+#endif
+        {} ; // constructor
     void Cumulative_Report(int mpi_rank, int num_ranks, MPI_Comm comm_world, uint64_t numSegments);
     void Last_Cycle_Report(int report_time, int mpi_rank, int num_ranks, MPI_Comm comm_world);
     void Clear_Last_Cycle_Timers();
     MC_Fast_Timer  timers[MC_Fast_Timer::Num_Timers];  // timers for various routines
-
+    
+#ifdef USE_CALIPER
+    cali::Annotation cali_annotation;
+#endif
+    
 private:
     void Print_Cumulative_Heading(int mpi_rank);
     void Print_Last_Cycle_Heading(int mpi_rank);
@@ -87,26 +99,48 @@ extern const char *mc_fast_timer_names[MC_Fast_Timer::Num_Timers];
       #define MC_FASTTIMER_GET_LASTCYCLE(timerIndex) (float)mcco->fast_timer->timers[timerIndex].lastCycleClock / 1000000.
 
    #else // else CHRONO_MISSING is not defined, so high resolution clock is available
+      #ifdef USE_CALIPER
+         #define MC_FASTTIMER_START(timerIndex) \
+             if (omp_get_thread_num() == 0) { \
+                 mcco->fast_timer->timers[timerIndex].startClock = std::chrono::high_resolution_clock::now(); \
+             } \
+             mcco->fast_timer->cali_annotation.begin(mc_fast_timer_names[timerIndex]);
 
-      #define MC_FASTTIMER_START(timerIndex) \
-          if (omp_get_thread_num() == 0) { \
-              mcco->fast_timer->timers[timerIndex].startClock = std::chrono::high_resolution_clock::now(); \
-          }
+         #define MC_FASTTIMER_STOP(timerIndex) \
+             if ( omp_get_thread_num() == 0 ) { \
+                 mcco->fast_timer->timers[timerIndex].stopClock = std::chrono::high_resolution_clock::now(); \
+                 mcco->fast_timer->timers[timerIndex].lastCycleClock += \
+                   std::chrono::duration_cast<std::chrono::microseconds> \
+                   (mcco->fast_timer->timers[timerIndex].stopClock - mcco->fast_timer->timers[timerIndex].startClock).count(); \
+                 mcco->fast_timer->timers[timerIndex].cumulativeClock += \
+                   std::chrono::duration_cast<std::chrono::microseconds> \
+                   (mcco->fast_timer->timers[timerIndex].stopClock - mcco->fast_timer->timers[timerIndex].startClock).count(); \
+                 mcco->fast_timer->timers[timerIndex].numCalls++;		\
+             } \
+             mcco->fast_timer->cali_annotation.end();
 
-      #define MC_FASTTIMER_STOP(timerIndex) \
-          if ( omp_get_thread_num() == 0 ) { \
-              mcco->fast_timer->timers[timerIndex].stopClock = std::chrono::high_resolution_clock::now(); \
-              mcco->fast_timer->timers[timerIndex].lastCycleClock += \
-                std::chrono::duration_cast<std::chrono::microseconds> \
-		(mcco->fast_timer->timers[timerIndex].stopClock - mcco->fast_timer->timers[timerIndex].startClock).count(); \
-              mcco->fast_timer->timers[timerIndex].cumulativeClock += \
-	        std::chrono::duration_cast<std::chrono::microseconds> \
-	        (mcco->fast_timer->timers[timerIndex].stopClock - mcco->fast_timer->timers[timerIndex].startClock).count(); \
-              mcco->fast_timer->timers[timerIndex].numCalls++;		\
-          }
+      #else // not defined USE_CALIPER
+
+         #define MC_FASTTIMER_START(timerIndex) \
+             if (omp_get_thread_num() == 0) { \
+                 mcco->fast_timer->timers[timerIndex].startClock = std::chrono::high_resolution_clock::now(); \
+             }
+
+         #define MC_FASTTIMER_STOP(timerIndex) \
+             if ( omp_get_thread_num() == 0 ) { \
+                 mcco->fast_timer->timers[timerIndex].stopClock = std::chrono::high_resolution_clock::now(); \
+                 mcco->fast_timer->timers[timerIndex].lastCycleClock += \
+                   std::chrono::duration_cast<std::chrono::microseconds> \
+                   (mcco->fast_timer->timers[timerIndex].stopClock - mcco->fast_timer->timers[timerIndex].startClock).count(); \
+                 mcco->fast_timer->timers[timerIndex].cumulativeClock += \
+                   std::chrono::duration_cast<std::chrono::microseconds> \
+                   (mcco->fast_timer->timers[timerIndex].stopClock - mcco->fast_timer->timers[timerIndex].startClock).count(); \
+                 mcco->fast_timer->timers[timerIndex].numCalls++;		\
+             }
+
+      #endif // end ifdef USE_CALIPER else branch
 
       #define MC_FASTTIMER_GET_LASTCYCLE(timerIndex) (float)mcco->fast_timer->timers[timerIndex].lastCycleClock / 1000000.
-
 
    #endif // end ifdef CHRONO_MISSING else section
 #endif // end if DISABLE_TIMERS
