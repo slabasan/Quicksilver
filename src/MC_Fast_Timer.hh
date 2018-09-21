@@ -50,7 +50,7 @@ class MC_Fast_Timer_Container
 public:
     MC_Fast_Timer_Container()
 #ifdef USE_CALIPER
-        : cali_annotation("mc.timer", CALI_ATTR_DEFAULT | CALI_ATTR_NESTED)
+        : cali_annotation("mc.timer", CALI_ATTR_SCOPE_PROCESS | CALI_ATTR_NESTED)
 #endif
         {} ; // constructor
     void Cumulative_Report(int mpi_rank, int num_ranks, MPI_Comm comm_world, uint64_t numSegments);

@@ -116,6 +116,16 @@ in the above mentioned three code phases, as well as a few other sub timings
 from cycle tracking.
 
 -------------------------------------------------------------------------------
+A note on Caliper:
+
+Caliper is a powerful performance profiling/tracing library. When configured
+with Caliper support, Quicksilver adds Caliper annotations for its timed
+regions (cycleTracking, cycleTrackingKernel, etc.) as the "mc.timer"
+attribute. Performance measurements can be configured through environment
+variables or the caliper.config configuration file. For Caliper documentation,
+see https://github.com/LLNL/Caliper.
+
+-------------------------------------------------------------------------------
 A note on asserts:
 
 Asserts are used to stop the code when it is run incorrectly, the input is 

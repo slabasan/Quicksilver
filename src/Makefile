@@ -76,8 +76,11 @@
 #                   and older Intel compilers.
 #         
 # -DUSE_CALIPER     Define this to enable Caliper instrumentation. Caliper
-#                   provides performance profiling infrastructure for a wide
-#                   range of tasks.
+#                   is a performance profiling / analysis library for
+#                   tracing, sampling, HW counter measurements, and much more.
+#                       When enabled, Quicksilver will link in the Caliper
+#                   library and export its timed regions to Caliper. See
+#                   https://github.com/LLNL/Caliper for more information.
 #         
 # -DUSE_NVTX        Define this for some extra NVProf profiling information.
 #                   It will create regions that can be visualized in NVVP.
