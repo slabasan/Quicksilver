@@ -28,6 +28,7 @@
 
 #ifdef USE_CALIPER
 #include <caliper/cali.h>
+#include <caliper/cali-manager.h>
 #ifdef HAVE_MPI
 #include <caliper/cali-mpi.h>
 #endif
@@ -51,7 +52,16 @@ int main(int argc, char** argv)
    Parameters params = getParameters(argc, argv);
    printParameters(params, cout);
 
+#ifdef USE_CALIPER
    setupCaliper();
+
+   cali::ConfigManager calimgr(params.simulationParams.caliperConfig.c_str());
+
+   if (calimgr.error())
+      std::cerr << "caliper config error: " << calimgr.error_msg() << std::endl;
+
+   calimgr.start();
+#endif
 
    // mcco stores just about everything.
    mcco = initMC(params);
@@ -100,6 +110,10 @@ int main(int argc, char** argv)
    delete mcco;
 #endif
 
+#ifdef USE_CALIPER
+   calimgr.flush();
+#endif
+
    mpiFinalize();
 
    return 0;
@@ -112,11 +126,8 @@ void setupCaliper()
    cali_mpi_init();
 #endif
 
-   cali_config_preset("CALI_CALIPER_ATTRIBUTE_PROPERTIES",
-                      "loop=process_scope:nested"
-                      ",iteration#qs.mainloop=process_scope:asvalue"
-                      ",cupti.runtimeAPI=process_scope:nested"
-                      ",cupti.driverAPI=process_scope:nested");
+   cali_config_preset("CALI_LOG_VERBOSITY", "0");
+   cali_config_preset("CALI_CALIPER_ATTRIBUTE_DEFAULT_SCOPE", "process");
 
    cali_set_global_string_byname("qs.git_vers", GIT_VERS);
    cali_set_global_string_byname("qs.git_hash", GIT_HASH);

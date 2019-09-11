@@ -226,6 +226,8 @@ namespace
       esName[0] = '\0';
       char xsec[1024];
       xsec[0] = '\0';
+      char calicfg[1024];
+      calicfg[0] = '\0';
       
       addArg("help",             'h', 0, 'i', &(help),           0,      "print this message");
       addArg("dt",               'D', 1, 'd', &(sp.dt),          0,      "time step (seconds)");
@@ -253,12 +255,14 @@ namespace
       addArg("bTally",           'B', 1, 'i', &(sp.balanceTallyReplications), 0, "number of balance tally replications");
       addArg("fTally",           'F', 1, 'i', &(sp.fluxTallyReplications),    0, "number of scalar flux tally replications");
       addArg("cTally",           'C', 1, 'i', &(sp.cellTallyReplications),    0, "number of scalar cell tally replications");
+      addArg("caliper-config",   'P', 1, 's', &(calicfg), sizeof(calicfg), "Caliper configuration");
 
       processArgs(argc, argv);
 
       sp.inputFile = name;
       sp.energySpectrum = esName;
       sp.crossSectionsOut = xsec;
+      sp.caliperConfig = calicfg;
 
       if (help)
       {

@@ -164,6 +164,7 @@ struct SimulationParameters
    int fluxTallyReplications;    //!< Number of replications for the scalar flux tally
    int cellTallyReplications;    //!< Number of replications for the scalar cell tally
    int coralBenchmark;           //!< enable correctness check for Coral2 benchmark
+   std::string caliperConfig;    //!< Caliper configuration string
 };
 
 struct Parameters
