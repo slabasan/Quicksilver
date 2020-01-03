@@ -106,8 +106,6 @@ CXXFLAGS =
 CPPFLAGS = 
 LDFLAGS =
 
-# CALIPER_DIR = $(spack location --install-dir caliper)
-
 ###############################################################################
 # Very simple GCC build with OpenMP but without MPI.  
 # This works on a Macbook (if gcc is installed)
@@ -139,21 +137,50 @@ LDFLAGS =
 ###############################################################################
 ### GCC -- with MPI and OpenMP and Caliper support
 ###############################################################################
-CALIPER_DIR = ${HOME}/local/caliper/toss3-release
+#CALIPER_DIR = $(spack location --install-dir caliper)
+# CALIPER_DIR = ${HOME}/local/caliper/toss3-release
+
+# CALIPER_FLAGS = -I${CALIPER_DIR}/include -DUSE_CALIPER
+# CALIPER_LDFLAGS = -Wl,-rpath ${CALIPER_DIR}/lib64 -L${CALIPER_DIR}/lib64 -lcaliper-mpi -lcaliper
+
+# OPENMP_FLAGS = -DHAVE_OPENMP -fopenmp
+# OPENMP_LDFLAGS = -fopenmp
+# MPI_FLAGS = -DHAVE_MPI
+# OPTFLAGS = -g -O2
+
+# CXX=mpicxx
+# CXXFLAGS = -std=c++11 $(OPTFLAGS) -Wpedantic
+# CPPFLAGS = $(MPI_FLAGS) $(OPENMP_FLAGS) $(CALIPER_FLAGS)
+# LDFLAGS = $(OPENMP_LDFLAGS) $(CALIPER_LDFLAGS)
+
+###############################################################################
+# Cuda on LLNL Lassen w/ Caliper
+###############################################################################
+## Choose one Cuda path
+# CUDA_PATH = /usr/local/cuda
+
+CALIPER_DIR=${HOME}/local/caliper/lassen-cuda10
+CUDA_PATH = /usr/tce/packages/cuda/cuda-10.1.168
+
+HOST_COMPILER = mpicxx
 
 CALIPER_FLAGS = -I${CALIPER_DIR}/include -DUSE_CALIPER
-CALIPER_LDFLAGS = -Wl,-rpath ${CALIPER_DIR}/lib64 -L${CALIPER_DIR}/lib64 -lcaliper-mpi -lcaliper
+CALIPER_LDFLAGS = -L${CALIPER_DIR}/lib64 -lcaliper
 
-OPENMP_FLAGS = -DHAVE_OPENMP -fopenmp
-OPENMP_LDFLAGS = -fopenmp
-MPI_FLAGS = -DHAVE_MPI
-OPTFLAGS = -g -O2
+OPTFLAGS = -O2 -g
+## Version below for debugging
+##OPTFLAGS = -DUSE_NVTX -g -G -lineinfo -O0
 
-CXX=mpicxx
-CXXFLAGS = -std=c++11 $(OPTFLAGS) -Wpedantic
-CPPFLAGS = $(MPI_FLAGS) $(OPENMP_FLAGS) $(CALIPER_FLAGS)
-LDFLAGS = $(OPENMP_LDFLAGS) $(CALIPER_LDFLAGS)
-
+CUDA_FLAGS = -I${CUDA_PATH}/include/
+#CUDA_LDFLAGS = -L${CUDA_PATH}/lib64/ -lcuda -lcudart
+#
+CXX=$(CUDA_PATH)/bin/nvcc
+CXXFLAGS = -DHAVE_CUDA -std=c++11 $(OPTFLAGS) -Xptxas -v 
+CXXFLAGS += -gencode=arch=compute_60,code=\"sm_60,compute_60\" 
+CXXFLAGS += --compiler-bindir=$(HOST_COMPILER)
+CPPFLAGS = -x cu -dc -DHAVE_MPI -DHAVE_ASYNC_MPI $(CALIPER_FLAGS)
+LDFLAGS  = $(CUDA_LDFLAGS) $(CALIPER_LDFLAGS)
+##LDFLAGS += ${CUDA_PATH}/lib64/libnvToolsExt.so
 
 ###############################################################################
 # LLNL LC BG/Q Comilers                                                       #
