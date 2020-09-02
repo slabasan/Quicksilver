@@ -4,6 +4,8 @@
 #include "MemoryControl.hh"
 #include "qs_assert.hh"
 
+#include <string>
+
 //--------------------------------------------------------------
 //------------ParticleVaultContainer Constructor----------------
 //Sets up the fixed sized data and pre-allocates the minimum 
@@ -25,15 +27,19 @@ ParticleVaultContainer( uint64_t vault_size,
     //Allocate and reserve space for particles for each vault
     for( uint64_t vault = 0; vault < num_vaults; vault++ )
     {
+        std::string vstr = std::to_string(vault);
+
         //Allocate Processing Vault
         _processingVault[vault] = 
             MemoryControl::allocate<ParticleVault>(1 ,VAR_MEM);
         _processingVault[vault]->reserve( vault_size );
+        _processingVault[vault]->set_label(std::string("pv.a.").append(vstr).c_str());
 
         //Allocate Processed Vault
         _processedVault[vault]  = 
             MemoryControl::allocate<ParticleVault>(1 ,VAR_MEM);
         _processedVault[vault]->reserve( vault_size );
+        _processedVault[vault]->set_label(std::string("pv.b.").append(vstr).c_str());
     }
 
     //Allocate and reserve space for particles for each extra vault
@@ -45,6 +51,7 @@ ParticleVaultContainer( uint64_t vault_size,
         _extraVault[e_vault] = 
             MemoryControl::allocate<ParticleVault>(1 ,VAR_MEM);
         _extraVault[e_vault]->reserve( vault_size );
+        _extraVault[e_vault]->set_label(std::string("ev.").append(std::to_string(e_vault)).c_str());
     }
 
     _sendQueue = MemoryControl::allocate<SendQueue>(1 ,VAR_MEM);

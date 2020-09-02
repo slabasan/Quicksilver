@@ -26,6 +26,10 @@
 #include "git_hash.hh"
 #include "git_vers.hh"
 
+#ifdef HAVE_CUDA
+#include <cuda.h>
+#endif
+
 #ifdef USE_CALIPER
 #include <caliper/cali.h>
 #include <caliper/cali-manager.h>
@@ -52,6 +56,9 @@ int main(int argc, char** argv)
    Parameters params = getParameters(argc, argv);
    printParameters(params, cout);
 
+#ifdef HAVE_CUDA
+   cuInit(0);
+#endif
 #ifdef USE_CALIPER
    setupCaliper();
 

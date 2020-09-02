@@ -65,6 +65,8 @@ public:
    HOST_DEVICE_CUDA
    void invalidateParticle( int index );
 
+   void set_label(const char* label);
+
 #if 0
    // Remove all of the invalid particles form the _particles list
    void cleanVault(int end_index);
@@ -202,6 +204,12 @@ eraseSwapParticle(int index)
         _particles[index] = _particles.back();
         _particles.pop_back();
     }
+}
+
+inline void ParticleVault::
+set_label(const char* label)
+{
+    _particles.set_label(label);
 }
 
 // -----------------------------------------------------------------------
