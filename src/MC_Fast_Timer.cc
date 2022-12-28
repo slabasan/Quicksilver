@@ -104,6 +104,7 @@ void MC_Fast_Timer_Container::Cumulative_Report(int mpi_rank, int num_ranks, MPI
     }
 }
 
+__attribute__((annotate("@critical_path(pointcut='around')")))
 void MC_Fast_Timer_Container::Last_Cycle_Report(int report_time, int mpi_rank, int num_ranks, MPI_Comm comm_world)
 {
 #ifdef DISABLE_TIMERS

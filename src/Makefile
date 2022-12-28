@@ -94,6 +94,15 @@
 #                   cell-based tally, in order to partially mimic photon
 #                   transport problems.
 #  
+# -DUSE_PERFFLOWASPECT
+#  				    Define this to enable PerfFlowAspect annotations. PFA
+#                   is an Aspect-Oriented Programming-based tool to analyze
+#                   cross-cutting performance concerns of science workflows.
+#                       When enabled, Quicksilver will link in the PFA
+#                   library and export its annotations to PFA. See
+#                   https://github.com/flux-framework/PerfFlowAspect for
+#                   more information.
+#         
 # ------------------------------------------------------------------------------
 
 SHELL = /bin/bash
@@ -159,13 +168,14 @@ LDFLAGS =
 ## Choose one Cuda path
 # CUDA_PATH = /usr/local/cuda
 
-CALIPER_DIR=${HOME}/local/caliper/lassen-cuda10
+PERFFLOWASPECT_DIR=${HOME}/git_root_pub/quicksilver-pfa/PerfFlowAspect/src/c/install
+#local/caliper/lassen-cuda10
 CUDA_PATH = /usr/tce/packages/cuda/cuda-10.1.168
 
-HOST_COMPILER = mpicxx
+HOST_COMPILER = mpiclang++
 
-CALIPER_FLAGS = -I${CALIPER_DIR}/include -DUSE_CALIPER
-CALIPER_LDFLAGS = -L${CALIPER_DIR}/lib64 -lcaliper
+PERFFLOWASPECT_FLAGS = -DUSE_PERFFLOWASPECT
+PERFFLOWASPECT_LDFLAGS = -L${PERFFLOWASPECT_DIR}/lib64 -lperfflow_runtime
 
 OPTFLAGS = -O2 -g
 ## Version below for debugging
@@ -177,9 +187,9 @@ CUDA_FLAGS = -I${CUDA_PATH}/include/
 CXX=$(CUDA_PATH)/bin/nvcc
 CXXFLAGS = -DHAVE_CUDA -std=c++11 $(OPTFLAGS) -Xptxas -v 
 CXXFLAGS += -gencode=arch=compute_60,code=\"sm_60,compute_60\" 
-CXXFLAGS += --compiler-bindir=$(HOST_COMPILER)
-CPPFLAGS = -x cu -dc -DHAVE_MPI -DHAVE_ASYNC_MPI $(CALIPER_FLAGS)
-LDFLAGS  = $(CUDA_LDFLAGS) $(CALIPER_LDFLAGS)
+CXXFLAGS += --compiler-bindir=$(HOST_COMPILER) -Xcompiler=-Xclang -Xcompiler=-load -Xcompiler=-Xclang -Xcompiler=${PERFFLOWASPECT_DIR}/lib64/libWeavePass.so
+CPPFLAGS = -x cu -dc -DHAVE_MPI -DHAVE_ASYNC_MPI $(PERFFLOWASPECT_FLAGS)
+LDFLAGS  = $(CUDA_LDFLAGS) $(PERFFLOWASPECT_LDFLAGS)
 ##LDFLAGS += ${CUDA_PATH}/lib64/libnvToolsExt.so
 
 ###############################################################################
