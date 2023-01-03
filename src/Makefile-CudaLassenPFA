@@ -146,49 +146,52 @@ LDFLAGS =
 ###############################################################################
 ### GCC -- with MPI and OpenMP and Caliper support
 ###############################################################################
+#CALIPER_DIR = $(spack location --install-dir caliper)
+# CALIPER_DIR = ${HOME}/local/caliper/toss3-release
+
+# CALIPER_FLAGS = -I${CALIPER_DIR}/include -DUSE_CALIPER
+# CALIPER_LDFLAGS = -Wl,-rpath ${CALIPER_DIR}/lib64 -L${CALIPER_DIR}/lib64 -lcaliper-mpi -lcaliper
+
+# OPENMP_FLAGS = -DHAVE_OPENMP -fopenmp
+# OPENMP_LDFLAGS = -fopenmp
+# MPI_FLAGS = -DHAVE_MPI
+# OPTFLAGS = -g -O2
+
+# CXX=mpicxx
+# CXXFLAGS = -std=c++11 $(OPTFLAGS) -Wpedantic
+# CPPFLAGS = $(MPI_FLAGS) $(OPENMP_FLAGS) $(CALIPER_FLAGS)
+# LDFLAGS = $(OPENMP_LDFLAGS) $(CALIPER_LDFLAGS)
+
+###############################################################################
+# Cuda on LLNL Lassen w/ Caliper
+###############################################################################
+## Choose one Cuda path
+# CUDA_PATH = /usr/local/cuda
+
 PERFFLOWASPECT_DIR=${HOME}/git_root_pub/quicksilver-pfa/PerfFlowAspect/src/c/install
+CUDA_PATH = /usr/tce/packages/cuda/cuda-10.1.168
+
+include ${PERFFLOWASPECT_DIR}/share/perfflowaspect_config.mk
+
+HOST_COMPILER = mpiclang++
 
 PERFFLOWASPECT_FLAGS = -DUSE_PERFFLOWASPECT
 PERFFLOWASPECT_LDFLAGS = -L${PERFFLOWASPECT_DIR}/lib64 -lperfflow_runtime
 
-OPENMP_FLAGS = -DHAVE_OPENMP -fopenmp
-OPENMP_LDFLAGS = -fopenmp
-MPI_FLAGS = -DHAVE_MPI
-OPTFLAGS = -g -O2
+OPTFLAGS = -O2 -g
+## Version below for debugging
+##OPTFLAGS = -DUSE_NVTX -g -G -lineinfo -O0
 
-CXX=mpiclang++
-CXXFLAGS = -std=c++11 $(OPTFLAGS) -Wpedantic
-CPPFLAGS = $(MPI_FLAGS) $(OPENMP_FLAGS) $(PERFFLOWASPECT_FLAGS)
-LDFLAGS = $(OPENMP_LDFLAGS) $(PERFFLOWASPECT_LDFLAGS)
-
-################################################################################
-## Cuda on LLNL Lassen w/ Caliper
-################################################################################
-### Choose one Cuda path
-## CUDA_PATH = /usr/local/cuda
+CUDA_FLAGS = -I${CUDA_PATH}/include/
+#CUDA_LDFLAGS = -L${CUDA_PATH}/lib64/ -lcuda -lcudart
 #
-#PERFFLOWASPECT_DIR=${HOME}/git_root_pub/quicksilver-pfa/PerfFlowAspect/src/c/install
-#CUDA_PATH = /usr/tce/packages/cuda/cuda-10.1.168
-#
-#HOST_COMPILER = mpiclang++
-#
-#PERFFLOWASPECT_FLAGS = -DUSE_PERFFLOWASPECT
-#PERFFLOWASPECT_LDFLAGS = -L${PERFFLOWASPECT_DIR}/lib64 -lperfflow_runtime
-#
-#OPTFLAGS = -O2 -g
-### Version below for debugging
-###OPTFLAGS = -DUSE_NVTX -g -G -lineinfo -O0
-#
-#CUDA_FLAGS = -I${CUDA_PATH}/include/
-##CUDA_LDFLAGS = -L${CUDA_PATH}/lib64/ -lcuda -lcudart
-##
-#CXX=$(CUDA_PATH)/bin/nvcc
-#CXXFLAGS = -DHAVE_CUDA -std=c++11 $(OPTFLAGS) -Xptxas -v 
-#CXXFLAGS += -gencode=arch=compute_60,code=\"sm_60,compute_60\" 
-#CXXFLAGS += --compiler-bindir=$(HOST_COMPILER) -Xcompiler=-Xclang -Xcompiler=-load -Xcompiler=-Xclang -Xcompiler=${PERFFLOWASPECT_DIR}/lib64/libWeavePass.so
-#CPPFLAGS = -x cu -dc -DHAVE_MPI -DHAVE_ASYNC_MPI $(PERFFLOWASPECT_FLAGS)
-#LDFLAGS  = $(CUDA_LDFLAGS) $(PERFFLOWASPECT_LDFLAGS)
-###LDFLAGS += ${CUDA_PATH}/lib64/libnvToolsExt.so
+CXX=$(CUDA_PATH)/bin/nvcc
+CXXFLAGS = -DHAVE_CUDA -std=c++11 $(OPTFLAGS) -Xptxas -v 
+CXXFLAGS += -gencode=arch=compute_60,code=\"sm_60,compute_60\" 
+CXXFLAGS += --compiler-bindir=$(HOST_COMPILER) -Xcompiler=-Xclang -Xcompiler=-load -Xcompiler=-Xclang -Xcompiler=${PERFFLOWASPECT_DIR}/lib64/libWeavePass.so
+CPPFLAGS = -x cu -dc -DHAVE_MPI -DHAVE_ASYNC_MPI $(PERFFLOWASPECT_FLAGS)
+LDFLAGS  = $(CUDA_LDFLAGS) $(PERFFLOWASPECT_LDFLAGS)
+##LDFLAGS += ${CUDA_PATH}/lib64/libnvToolsExt.so
 
 ###############################################################################
 # LLNL LC BG/Q Comilers                                                       #
